@@ -1,5 +1,5 @@
 from app.config import Settings, Stock
-from app.fetcher import clean_html, mentions_stock, normalize_url
+from app.fetcher import clean_html, mentions_stock, normalize_url, source_is_allowed
 
 
 def test_normalize_url_removes_tracking() -> None:
@@ -32,3 +32,17 @@ def test_short_us_symbol_requires_word_boundary() -> None:
     stock = Stock("US", "A", "Agilent Technologies")
     assert mentions_stock("A shares rise after earnings", stock)
     assert not mentions_stock("Apple shares rise", stock)
+
+
+def test_financial_source_allowlist() -> None:
+    allowed = ["經濟日報", "Reuters", "Yahoo Finance"]
+    assert source_is_allowed("經濟日報", allowed)
+    assert source_is_allowed("Reuters.com", allowed)
+    assert source_is_allowed("Yahoo Finance Canada", allowed)
+    assert not source_is_allowed("TVBS新聞網", allowed)
+    assert not source_is_allowed(None, allowed)
+
+
+def test_parse_allowed_sources() -> None:
+    settings = Settings(allowed_news_sources="經濟日報, Reuters ,Bloomberg")
+    assert settings.allowed_news_sources == ["經濟日報", "Reuters", "Bloomberg"]

@@ -28,6 +28,39 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = Field(default=20, ge=1, le=120)
     max_article_bytes: int = Field(default=2_000_000, ge=10_000, le=10_000_000)
     user_agent: str = "company-news-fetcher/1.0"
+    allowed_news_sources: Annotated[list[str], NoDecode] = [
+        "經濟日報",
+        "工商時報",
+        "鉅亨網",
+        "Anue鉅亨",
+        "news.cnyes.com",
+        "MoneyDJ理財網",
+        "Yahoo股市",
+        "Yahoo奇摩股市",
+        "財訊快報",
+        "自由財經",
+        "旺得富理財網",
+        "理財周刊",
+        "今周刊",
+        "商業周刊",
+        "Smart自學網",
+        "CMoney",
+        "Reuters",
+        "Bloomberg",
+        "CNBC",
+        "MarketWatch",
+        "The Wall Street Journal",
+        "WSJ",
+        "Financial Times",
+        "Barron's",
+        "Yahoo Finance",
+        "Nasdaq",
+        "Seeking Alpha",
+        "The Motley Fool",
+        "Investor's Business Daily",
+        "Benzinga",
+        "Morningstar",
+    ]
     stocks: Annotated[list[Stock], NoDecode] = [
         Stock("TW", "2330", "台積電"),
         Stock("US", "AAPL", "Apple"),
@@ -44,6 +77,16 @@ class Settings(BaseSettings):
         if value.startswith("postgres://"):
             return value.replace("postgres://", "postgresql+psycopg://", 1)
         return value
+
+    @field_validator("allowed_news_sources", mode="before")
+    @classmethod
+    def parse_allowed_sources(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        sources = [source.strip() for source in value.split(",") if source.strip()]
+        if not sources:
+            raise ValueError("ALLOWED_NEWS_SOURCES 不可為空")
+        return sources
 
     @field_validator("stocks", mode="before")
     @classmethod

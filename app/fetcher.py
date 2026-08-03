@@ -54,6 +54,13 @@ def mentions_stock(text: str | None, stock: Stock) -> bool:
     return re.search(rf"(?<![\w]){re.escape(symbol)}(?![\w])", normalized) is not None
 
 
+def source_is_allowed(source: str | None, allowed_sources: list[str]) -> bool:
+    if not source:
+        return False
+    normalized = source.casefold().strip()
+    return any(allowed.casefold().strip() in normalized for allowed in allowed_sources)
+
+
 def fetch_article_text(url: str, settings: Settings) -> tuple[str, str]:
     request = Request(
         url,
@@ -107,6 +114,11 @@ def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
         if not url:
             continue
         title = clean_html(entry.get("title")) or "(無標題)"
+        source_data = entry.get("source", {})
+        source = source_data.get("title") if hasattr(source_data, "get") else None
+        if not source_is_allowed(source, settings.allowed_news_sources):
+            logger.info("排除非白名單來源 %s:%s - %s (%s)", stock.market, stock.symbol, title, source)
+            continue
         matched_on = "title" if mentions_stock(title, stock) else None
         if not matched_on:
             try:
@@ -125,7 +137,6 @@ def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
                     error,
                 )
                 continue
-        source = entry.get("source", {})
         items.append(
             {
                 "market": stock.market,
@@ -133,7 +144,7 @@ def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
                 "company_name": stock.name,
                 "title": title,
                 "summary": clean_html(entry.get("summary")),
-                "source": source.get("title") if isinstance(source, dict) else None,
+                "source": source,
                 "url": url,
                 "url_hash": hashlib.sha256(url.encode()).hexdigest(),
                 "published_at": published_at,

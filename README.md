@@ -4,6 +4,12 @@
 
 新聞會進行二次相關性驗證：標題包含公司名稱或完整股票代號時直接收錄；否則下載原文並檢查正文。標題與正文都未命中，或正文無法解析時，不會寫入資料庫。
 
+新聞來源採財經媒體白名單，只收錄 `.env` 的 `ALLOWED_NEWS_SOURCES`。內建名單包含國內的經濟日報、工商時報、鉅亨、MoneyDJ、Yahoo 股市、財訊快報等，以及 Reuters、Bloomberg、CNBC、MarketWatch、WSJ、Financial Times、Yahoo Finance 等國際財經媒體。來源名稱採不分大小寫的部分比對，可直接從環境變數增減：
+
+```env
+ALLOWED_NEWS_SOURCES=經濟日報,工商時報,MoneyDJ理財網,Reuters,Bloomberg,CNBC,Yahoo Finance
+```
+
 ## 快速啟動
 
 1. 複製環境設定：
