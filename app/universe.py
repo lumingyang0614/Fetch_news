@@ -32,8 +32,16 @@ def parse_tw(data: bytes, exchange: str) -> list[dict]:
     rows = json.loads(data.decode("utf-8-sig"))
     result = []
     for row in rows:
-        symbol = str(row.get("公司代號", "")).strip()
-        name = str(row.get("公司簡稱") or row.get("公司名稱") or "").strip()
+        # TWSE currently uses Chinese field names, while TPEx uses English
+        # OpenAPI field names. Keep both formats supported.
+        symbol = str(row.get("公司代號") or row.get("SecuritiesCompanyCode") or "").strip()
+        name = str(
+            row.get("公司簡稱")
+            or row.get("公司名稱")
+            or row.get("CompanyAbbreviation")
+            or row.get("CompanyName")
+            or ""
+        ).strip()[:200]
         if symbol and name:
             result.append({"market": "TW", "symbol": symbol, "name": name, "exchange": exchange, "enabled": True})
     return result
@@ -45,7 +53,9 @@ def parse_us(data: bytes, exchange: str) -> list[dict]:
     result = []
     for row in rows:
         symbol = (row.get("Symbol") or row.get("ACT Symbol") or "").strip()
-        name = (row.get("Security Name") or "").strip()
+        # A single overlong Nasdaq description must not roll back the whole
+        # exchange import; Company.name is stored as VARCHAR(200).
+        name = (row.get("Security Name") or "").strip()[:200]
         if not symbol or not name or symbol.startswith("File Creation Time"):
             continue
         if row.get("Test Issue", "N") == "Y" or row.get("ETF", "N") == "Y":
