@@ -10,6 +10,7 @@ from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 import feedparser
+from bs4 import BeautifulSoup
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -39,6 +40,46 @@ def clean_html(value: str | None) -> str | None:
     return re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", value))).strip()
 
 
+def mentions_stock(text: str | None, stock: Stock) -> bool:
+    if not text:
+        return False
+    normalized = unescape(text).casefold()
+    name = stock.name.strip().casefold()
+    if name and name in normalized:
+        return True
+    symbol = stock.symbol.strip().casefold()
+    if not symbol:
+        return False
+    # 避免 1301 命中 11301，或 A 命中 Apple 等其他單字。
+    return re.search(rf"(?<![\w]){re.escape(symbol)}(?![\w])", normalized) is not None
+
+
+def fetch_article_text(url: str, settings: Settings) -> tuple[str, str]:
+    request = Request(
+        url,
+        headers={
+            "User-Agent": settings.user_agent,
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.7",
+        },
+    )
+    with urlopen(request, timeout=settings.request_timeout_seconds) as response:
+        content_type = response.headers.get_content_type()
+        if content_type not in {"text/html", "application/xhtml+xml"}:
+            return response.geturl(), ""
+        raw = response.read(settings.max_article_bytes + 1)
+        if len(raw) > settings.max_article_bytes:
+            raw = raw[: settings.max_article_bytes]
+        encoding = response.headers.get_content_charset() or "utf-8"
+        final_url = response.geturl()
+
+    soup = BeautifulSoup(raw.decode(encoding, errors="replace"), "html.parser")
+    for node in soup(["script", "style", "noscript", "nav", "header", "footer", "aside", "form"]):
+        node.decompose()
+    content = soup.find("article") or soup.find("main") or soup.body
+    return final_url, content.get_text(" ", strip=True) if content else ""
+
+
 def google_news_url(stock: Stock, lookback_days: int) -> str:
     market_hint = "台股 OR 上市 OR 櫃買" if stock.market == "TW" else "stock OR NASDAQ OR NYSE"
     query = quote_plus(f'("{stock.name}" OR "{stock.symbol}") ({market_hint}) when:{lookback_days}d')
@@ -65,13 +106,32 @@ def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
         url = normalize_url(entry.get("link", ""))
         if not url:
             continue
+        title = clean_html(entry.get("title")) or "(無標題)"
+        matched_on = "title" if mentions_stock(title, stock) else None
+        if not matched_on:
+            try:
+                resolved_url, article_text = fetch_article_text(url, settings)
+                if not mentions_stock(article_text, stock):
+                    logger.info("排除不相關新聞 %s:%s - %s", stock.market, stock.symbol, title)
+                    continue
+                matched_on = "body"
+                url = normalize_url(resolved_url)
+            except Exception as error:
+                logger.warning(
+                    "正文驗證失敗，排除 %s:%s - %s (%s)",
+                    stock.market,
+                    stock.symbol,
+                    title,
+                    error,
+                )
+                continue
         source = entry.get("source", {})
         items.append(
             {
                 "market": stock.market,
                 "symbol": stock.symbol,
                 "company_name": stock.name,
-                "title": clean_html(entry.get("title")) or "(無標題)",
+                "title": title,
                 "summary": clean_html(entry.get("summary")),
                 "source": source.get("title") if isinstance(source, dict) else None,
                 "url": url,
@@ -79,6 +139,7 @@ def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
                 "published_at": published_at,
             }
         )
+        logger.debug("新聞通過 %s 驗證：%s", matched_on, title)
     return items
 
 

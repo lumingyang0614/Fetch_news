@@ -5,6 +5,7 @@ description = "定時擷取台股與美股個股新聞並寫入 PostgreSQL"
 requires-python = ">=3.10"
 dependencies = [
   "apscheduler>=3.10,<4",
+  "beautifulsoup4>=4.12,<5",
   "feedparser>=6.0,<7",
   "psycopg[binary]>=3.1,<4",
   "pydantic-settings>=2.2,<3",

@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     universe_sync_hour: int = Field(default=3, ge=0, le=23)
     news_lookback_days: int = Field(default=7, ge=1, le=30)
     request_timeout_seconds: int = Field(default=20, ge=1, le=120)
+    max_article_bytes: int = Field(default=2_000_000, ge=10_000, le=10_000_000)
     user_agent: str = "company-news-fetcher/1.0"
     stocks: Annotated[list[Stock], NoDecode] = [
         Stock("TW", "2330", "台積電"),
