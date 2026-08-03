@@ -1,6 +1,61 @@
+# Environment variables and local secrets
 .env
-.venv/
-__pycache__/
-.pytest_cache/
-*.py[cod]
+.env.*
+!.env.example
 
+# Python virtual environments
+.venv/
+venv/
+venv_*/
+env/
+ENV/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+
+# Test, lint, type-check and coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Packaging and build output
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Runtime output
+*.log
+logs/
+tmp/
+temp/
+*.pid
+
+# PostgreSQL local data and backups
+pgdata/
+postgres_data/
+*.dump
+*.backup
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
