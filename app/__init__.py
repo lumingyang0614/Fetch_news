@@ -1,0 +1,2 @@
+"""Company news fetcher."""
+

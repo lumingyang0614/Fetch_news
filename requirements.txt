@@ -1,0 +1,15 @@
+# 排程
+APScheduler>=3.10.4,<4.0
+
+# RSS 新聞解析
+feedparser>=6.0.11,<7.0
+
+# 純 PostgreSQL 連線驅動（binary 版本適合 Windows，無需自行編譯）
+psycopg[binary]>=3.1.18,<4.0
+SQLAlchemy>=2.0.29,<3.0
+
+# .env 與設定驗證
+pydantic-settings>=2.2.1,<3.0
+
+# Windows 時區資料，供 Asia/Taipei 排程使用
+tzdata>=2024.1

@@ -1,0 +1,29 @@
+[project]
+name = "company-news-fetcher"
+version = "0.1.0"
+description = "定時擷取台股與美股個股新聞並寫入 PostgreSQL"
+requires-python = ">=3.10"
+dependencies = [
+  "apscheduler>=3.10,<4",
+  "feedparser>=6.0,<7",
+  "psycopg[binary]>=3.1,<4",
+  "pydantic-settings>=2.2,<3",
+  "sqlalchemy>=2.0,<3",
+  "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+company-news = "app.main:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
