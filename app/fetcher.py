@@ -88,7 +88,11 @@ def fetch_article_text(url: str, settings: Settings) -> tuple[str, str]:
 
 
 def google_news_url(stock: Stock, lookback_days: int) -> str:
-    market_hint = "台股 OR 上市 OR 櫃買" if stock.market == "TW" else "stock OR NASDAQ OR NYSE"
+    market_hint = (
+        "台股 OR 上市 OR 上櫃 OR 櫃買 OR 興櫃 OR 創新板"
+        if stock.market == "TW"
+        else "stock OR NASDAQ OR NYSE"
+    )
     query = quote_plus(f'("{stock.name}" OR "{stock.symbol}") ({market_hint}) when:{lookback_days}d')
     if stock.market == "TW":
         return f"https://news.google.com/rss/search?q={query}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"

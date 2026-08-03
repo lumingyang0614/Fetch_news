@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 SOURCES = {
     "TWSE": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
     "TPEX": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
+    "TPEX_EMERGING": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_R",
     "NASDAQ": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
     "OTHER_US": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
 }
@@ -77,6 +78,7 @@ def sync_universe(settings: Settings, sessions: sessionmaker[Session]) -> int:
         loaders = [
             ("TWSE", parse_tw),
             ("TPEX", parse_tw),
+            ("TPEX_EMERGING", parse_tw),
             ("NASDAQ", parse_us),
             ("OTHER_US", parse_us),
         ]
@@ -90,4 +92,3 @@ def sync_universe(settings: Settings, sessions: sessionmaker[Session]) -> int:
                 logger.exception("%s 股票池同步失敗", source)
     logger.info("股票池同步完成，共處理 %d 檔", total)
     return total
-

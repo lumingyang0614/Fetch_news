@@ -1,6 +1,6 @@
 # Company News Fetcher
 
-定時搜尋台股與美股個股新聞，寫入 PostgreSQL 的 `company_news` 資料表。股票池會從 TWSE、TPEx 與 Nasdaq Trader 官方資料自動同步，並分批輪詢，適合處理數千檔股票。
+定時搜尋台股與美股個股新聞，寫入 PostgreSQL 的 `company_news` 資料表。台股股票池涵蓋上市（含創新板）、上櫃與興櫃公司，分別從 TWSE 與 TPEx 官方資料同步；美股從 Nasdaq Trader 同步，並採分批輪詢，適合處理數千檔股票。
 
 新聞會進行二次相關性驗證：標題包含公司名稱或完整股票代號時直接收錄；否則下載原文並檢查正文。標題與正文都未命中，或正文無法解析時，不會寫入資料庫。
 
