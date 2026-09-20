@@ -4,6 +4,7 @@ APScheduler>=3.10.4,<4.0
 # RSS 新聞解析
 feedparser>=6.0.11,<7.0
 beautifulsoup4>=4.12.3,<5.0
+truststore>=0.10.4,<1.0
 
 # 純 PostgreSQL 連線驅動（binary 版本適合 Windows，無需自行編譯）
 psycopg[binary]>=3.1.18,<4.0

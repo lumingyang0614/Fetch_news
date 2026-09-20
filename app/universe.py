@@ -4,12 +4,13 @@ import csv
 import io
 import json
 import logging
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings, Stock
+from app.http_client import open_url
 from app.models import Company
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ SOURCES = {
 
 def download(url: str, settings: Settings) -> bytes:
     request = Request(url, headers={"User-Agent": settings.user_agent})
-    with urlopen(request, timeout=settings.request_timeout_seconds) as response:
+    with open_url(request, settings.request_timeout_seconds) as response:
         return response.read()
 
 

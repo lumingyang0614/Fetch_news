@@ -7,7 +7,7 @@ from calendar import timegm
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 import feedparser
 from bs4 import BeautifulSoup
@@ -16,6 +16,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings, Stock
+from app.http_client import open_url
 from app.models import Company, CompanyNews
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ def fetch_article_text(url: str, settings: Settings) -> tuple[str, str]:
             "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.7",
         },
     )
-    with urlopen(request, timeout=settings.request_timeout_seconds) as response:
+    with open_url(request, settings.request_timeout_seconds) as response:
         content_type = response.headers.get_content_type()
         if content_type not in {"text/html", "application/xhtml+xml"}:
             return response.geturl(), ""
@@ -106,7 +107,7 @@ def entry_datetime(entry: dict) -> datetime | None:
 
 def fetch_stock(stock: Stock, settings: Settings) -> list[dict]:
     request = Request(google_news_url(stock, settings.news_lookback_days), headers={"User-Agent": settings.user_agent})
-    with urlopen(request, timeout=settings.request_timeout_seconds) as response:
+    with open_url(request, settings.request_timeout_seconds) as response:
         feed = feedparser.parse(response.read())
     cutoff = datetime.now(timezone.utc) - timedelta(days=settings.news_lookback_days)
     items = []
